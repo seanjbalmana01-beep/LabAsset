@@ -25,52 +25,53 @@ pipeline {
             }
         }
 
-        stage('Validate Compose') {
+        stage('Build and Deploy') {
             steps {
-                sh 'docker compose config --quiet'
-            }
-        }
+                withCredentials([file(
+                    credentialsId: 'labasset-env',
+                    variable: 'ENV_FILE'
+                )]) {
+                    sh '''
+                        set +x
+                        cp "$ENV_FILE" .env
+                        trap 'rm -f .env' EXIT
 
-        stage('Build Images') {
-            steps {
-                sh 'docker compose build'
-            }
-        }
+                        echo "Validating Docker Compose configuration..."
+                        docker compose config --quiet
 
-        stage('Pre-Deploy Smoke Test') {
-            steps {
-                sh '''
-                    docker compose up -d
-                    ready=0
-                    for i in $(seq 1 30); do
-                        if curl -fsS http://host.docker.internal:8080/api/health; then
-                            ready=1
-                            break
+                        echo "Building application images..."
+                        docker compose build
+
+                        echo "Starting application for pre-deploy checks..."
+                        docker compose up -d
+
+                        ready=0
+                        for i in $(seq 1 30); do
+                            if curl -fsS http://host.docker.internal:8080/api/health; then
+                                ready=1
+                                break
+                            fi
+                            sleep 2
+                        done
+
+                        if [ "$ready" -ne 1 ]; then
+                            echo "API health check failed."
+                            exit 1
                         fi
-                        sleep 2
-                    done
-                    if [ "$ready" -ne 1 ]; then
-                        echo "API health check failed."
-                        exit 1
-                    fi
-                    curl -fsS http://host.docker.internal:8080/api/assets
-                '''
-            }
-        }
 
-        stage('Deploy') {
-            steps {
-                sh 'docker compose up -d --no-build --remove-orphans'
-            }
-        }
+                        curl -fsS http://host.docker.internal:8080/api/assets
 
-        stage('Post-Deploy Smoke Test') {
-            steps {
-                sh '''
-                    curl -fsS http://host.docker.internal:8080/
-                    curl -fsS http://host.docker.internal:8080/api/health
-                    curl -fsS http://host.docker.internal:8080/api/assets
-                '''
+                        echo "Deploying application..."
+                        docker compose up -d --no-build --remove-orphans
+
+                        echo "Running post-deploy checks..."
+                        curl -fsS http://host.docker.internal:8080/
+                        curl -fsS http://host.docker.internal:8080/api/health
+                        curl -fsS http://host.docker.internal:8080/api/assets
+
+                        echo "All deployment checks passed."
+                    '''
+                }
             }
         }
     }
