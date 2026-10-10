@@ -1,4 +1,4 @@
-services:
+﻿services:
   jenkins:
     build: .
     container_name: jenkins
@@ -10,6 +10,7 @@ services:
     volumes:
       - jenkins_home:/var/jenkins_home
       - /var/run/docker.sock:/var/run/docker.sock
+      - ../../:/workspace/labasset
 
 volumes:
   jenkins_home:
