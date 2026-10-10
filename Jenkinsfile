@@ -43,7 +43,7 @@ pipeline {
                     docker compose up -d
                     ready=0
                     for i in $(seq 1 30); do
-                        if curl -fsS http://localhost:8080/api/health; then
+                        if curl -fsS http://host.docker.internal:8080/api/health; then
                             ready=1
                             break
                         fi
@@ -53,7 +53,7 @@ pipeline {
                         echo "API health check failed."
                         exit 1
                     fi
-                    curl -fsS http://localhost:8080/api/assets
+                    curl -fsS http://host.docker.internal:8080/api/assets
                 '''
             }
         }
@@ -67,9 +67,9 @@ pipeline {
         stage('Post-Deploy Smoke Test') {
             steps {
                 sh '''
-                    curl -fsS http://localhost:8080/
-                    curl -fsS http://localhost:8080/api/health
-                    curl -fsS http://localhost:8080/api/assets
+                    curl -fsS http://host.docker.internal:8080/
+                    curl -fsS http://host.docker.internal:8080/api/health
+                    curl -fsS http://host.docker.internal:8080/api/assets
                 '''
             }
         }
