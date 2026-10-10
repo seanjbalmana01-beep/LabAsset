@@ -41,13 +41,18 @@ pipeline {
             steps {
                 sh '''
                     docker compose up -d
+                    ready=0
                     for i in $(seq 1 30); do
                         if curl -fsS http://localhost:8080/api/health; then
+                            ready=1
                             break
                         fi
                         sleep 2
                     done
-                    curl -fsS http://localhost:8080/api/health
+                    if [ "$ready" -ne 1 ]; then
+                        echo "API health check failed."
+                        exit 1
+                    fi
                     curl -fsS http://localhost:8080/api/assets
                 '''
             }
