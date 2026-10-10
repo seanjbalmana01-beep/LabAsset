@@ -1,6 +1,4 @@
-**`labasset/Jenkinsfile`**
-```groovy
-pipeline {
+﻿pipeline {
     agent any
 
     environment {
@@ -10,38 +8,74 @@ pipeline {
 
     stages {
         stage('Checkout') {
-            steps { checkout scm }
+            steps {
+                checkout scm
+            }
         }
 
-        stage('Test') {
+        stage('Verify Files') {
             steps {
-                sh 'echo "Running tests..."'
+                sh '''
+                    test -f docker-compose.yml
+                    test -f .env.example
+                    test -f frontend/Dockerfile
+                    test -f asset-api/server.js
+                    echo "Required project files found."
+                '''
+            }
+        }
+
+        stage('Validate Compose') {
+            steps {
+                sh 'docker compose config --quiet'
             }
         }
 
         stage('Build Images') {
-            steps { sh 'docker compose build' }
+            steps {
+                sh 'docker compose build'
+            }
+        }
+
+        stage('Pre-Deploy Smoke Test') {
+            steps {
+                sh '''
+                    docker compose up -d
+                    for i in $(seq 1 30); do
+                        if curl -fsS http://localhost:8080/api/health; then
+                            break
+                        fi
+                        sleep 2
+                    done
+                    curl -fsS http://localhost:8080/api/health
+                    curl -fsS http://localhost:8080/api/assets
+                '''
+            }
         }
 
         stage('Deploy') {
             steps {
-                withCredentials([file(credentialsId: 'labasset-env', variable: 'ENV_FILE')]) {
-                    sh 'cp "$ENV_FILE" .env'
-                    sh 'docker compose up -d --no-build --remove-orphans'
-                }
+                sh 'docker compose up -d --no-build --remove-orphans'
             }
         }
 
-        stage('Smoke Test') {
+        stage('Post-Deploy Smoke Test') {
             steps {
-                sh 'curl -f http://localhost:8080/ || exit 1'
+                sh '''
+                    curl -fsS http://localhost:8080/
+                    curl -fsS http://localhost:8080/api/health
+                    curl -fsS http://localhost:8080/api/assets
+                '''
             }
         }
     }
 
     post {
-        success { echo "Build ${TAG} deployed successfully." }
-        failure { echo "Build ${TAG} failed." }
-        always  { sh 'rm -f .env' }
+        success {
+            echo "Build ${TAG} completed successfully."
+        }
+        failure {
+            echo "Build ${TAG} failed."
+        }
     }
 }
