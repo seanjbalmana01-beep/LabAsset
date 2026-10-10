@@ -1,0 +1,53 @@
+services:
+  proxy:
+    build: ./proxy
+    image: labasset/proxy:${TAG:-latest}
+    ports:
+      - "8080:80"
+    depends_on: [frontend, asset-api]
+    restart: unless-stopped
+    networks: [app-net]
+
+  frontend:
+    build: ./frontend
+    image: labasset/frontend:${TAG:-latest}
+    restart: unless-stopped
+    networks: [app-net]
+
+  asset-api:
+    build: ./asset-api
+    image: labasset/asset-api:${TAG:-latest}
+    environment:
+      DB_HOST: db
+      DB_NAME: labasset_db
+      DB_USER: ${DB_USER}
+      DB_PASSWORD: ${DB_PASSWORD}
+    depends_on:
+      db:
+        condition: service_healthy
+    restart: unless-stopped
+    networks: [app-net]
+
+  db:
+    image: mysql:8.4
+    environment:
+      MYSQL_ROOT_PASSWORD: ${DB_ROOT_PASSWORD}
+      MYSQL_DATABASE: labasset_db
+      MYSQL_USER: ${DB_USER}
+      MYSQL_PASSWORD: ${DB_PASSWORD}
+    volumes:
+      - db-data:/var/lib/mysql
+      - ./db/init.sql:/docker-entrypoint-initdb.d/init.sql
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+    restart: unless-stopped
+    networks: [app-net]
+
+volumes:
+  db-data:
+
+networks:
+  app-net:
