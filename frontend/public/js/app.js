@@ -1,6 +1,4 @@
-let requests = [
-    { id: 1, professor: 'Dr. Alcantara', equipment: 'Oscilloscope Rigol DS1054Z', room: 'Hardware Lab', date: '2026-10-12 10:00', status: 'Pending' }
-];
+let requests = [];
 
 function switchView(viewName) {
     const profView = document.getElementById('view-professor');
@@ -22,20 +20,44 @@ function switchView(viewName) {
     }
 }
 
-function handleRequestSubmit(event) {
+async function handleRequestSubmit(event) {
     event.preventDefault();
+
     const equipment = document.getElementById('eq-select').value;
     const room = document.getElementById('eq-room').value;
     const date = document.getElementById('eq-date').value;
 
     const newReq = {
-        id: requests.length + 1,
         professor: 'Dr. Alcantara',
         equipment,
         room,
-        date: date.replace('T', ' '),
+        request_date: date.replace('T', ' '),
         status: 'Pending'
     };
+
+    try {
+        const response = await fetch('/api/requests', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify(newReq)
+        });
+
+        if (!response.ok) {
+            throw new Error('Failed to submit request');
+        }
+
+        await loadRequests();
+
+        event.target.reset();
+        alert('Equipment request submitted successfully!');
+    } catch (error) {
+        console.error('Error submitting request:', error);
+        alert('Unable to submit request.');
+    }
+}
+
 
     requests.push(newReq);
     renderProfessorList();
@@ -81,12 +103,26 @@ function renderCustodianTable() {
     `).join('');
 }
 
-function updateStatus(id, newStatus) {
-    const req = requests.find(r => r.id === id);
-    if (req) {
-        req.status = newStatus;
-        renderCustodianTable();
-        renderProfessorList();
+async function updateStatus(id, newStatus) {
+    try {
+        const response = await fetch(`/api/requests/${id}`, {
+            method: 'PUT',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({
+                status: newStatus
+            })
+        });
+
+        if (!response.ok) {
+            throw new Error('Failed to update request');
+        }
+
+        await loadRequests();
+    } catch (error) {
+        console.error('Error updating request:', error);
+        alert('Unable to update request.');
     }
 }
 
@@ -96,6 +132,24 @@ function getStatusBg(status) {
     return 'amber';
 }
 
-function loadRequests() {
-    renderCustodianTable();
+async function loadRequests() {
+    try {
+        const response = await fetch('/api/requests');
+
+        if (!response.ok) {
+            throw new Error('Failed to load requests');
+        }
+
+        requests = await response.json();
+
+        renderCustodianTable();
+        renderProfessorList();
+    } catch (error) {
+        console.error('Error loading requests:', error);
+    }
 }
+
+document.addEventListener('DOMContentLoaded', () => {
+    loadRequests();
+}
+);

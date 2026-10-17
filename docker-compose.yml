@@ -1,38 +1,73 @@
 services:
+
   proxy:
     build: ./proxy
     image: labasset/proxy:${TAG:-latest}
     ports:
       - "8080:80"
-    depends_on: [frontend, asset-api]
+    depends_on:
+      frontend:
+        condition: service_started
+      asset-api:
+        condition: service_healthy
+      request-service:
+        condition: service_healthy
     restart: unless-stopped
-    networks: [app-net]
+    networks:
+      - app-net
 
   frontend:
     build: ./frontend
     image: labasset/frontend:${TAG:-latest}
     restart: unless-stopped
-    networks: [app-net]
+    networks:
+      - app-net
 
   asset-api:
     build: ./asset-api
     image: labasset/asset-api:${TAG:-latest}
     environment:
       DB_HOST: db
-      DB_NAME: labasset_db
+      DB_NAME: ${DB_NAME}
       DB_USER: ${DB_USER}
       DB_PASSWORD: ${DB_PASSWORD}
     depends_on:
       db:
         condition: service_healthy
+    healthcheck:
+      test: ["CMD", "wget", "-qO-", "http://localhost:3000/health"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
     restart: unless-stopped
-    networks: [app-net]
+    networks:
+      - app-net
+
+  request-service:
+    build: ./request-service
+    image: labasset/request-service:${TAG:-latest}
+    environment:
+      DB_HOST: db
+      DB_NAME: ${DB_NAME}
+      DB_USER: ${DB_USER}
+      DB_PASSWORD: ${DB_PASSWORD}
+    depends_on:
+      db:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "wget", "-qO-", "http://localhost:3001/health"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    restart: unless-stopped
+    networks:
+      - app-net
 
   db:
     image: mysql:8.4
     environment:
       MYSQL_ROOT_PASSWORD: ${DB_ROOT_PASSWORD}
-      MYSQL_DATABASE: labasset_db
+      MYSQL_DATABASE: ${DB_NAME}
       MYSQL_USER: ${DB_USER}
       MYSQL_PASSWORD: ${DB_PASSWORD}
     volumes:
@@ -44,7 +79,8 @@ services:
       timeout: 5s
       retries: 10
     restart: unless-stopped
-    networks: [app-net]
+    networks:
+      - app-net
 
 volumes:
   db-data:
