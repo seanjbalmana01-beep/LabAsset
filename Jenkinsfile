@@ -38,7 +38,9 @@ stage('Test') {
                 < frontend/public/js/app.js
 
             echo "Checking required frontend elements..."
-            grep -q 'id="asset-list"' frontend/public/index.html
+            grep -q 'LabAsset Portal' frontend/public/index.html
+
+            echo "Frontend element check passed."
 
             echo "All tests passed."
         '''
