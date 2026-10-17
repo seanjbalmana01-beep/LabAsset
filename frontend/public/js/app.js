@@ -58,14 +58,6 @@ async function handleRequestSubmit(event) {
     }
 }
 
-
-    requests.push(newReq);
-    renderProfessorList();
-    renderCustodianTable();
-    event.target.reset();
-    alert('Equipment request submitted successfully!');
-}
-
 function renderProfessorList() {
     const listContainer = document.getElementById('prof-requests-list');
     listContainer.innerHTML = requests.map(req => `
