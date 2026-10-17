@@ -1,9 +1,15 @@
+
 pipeline {
     agent any
 
+    triggers {
+        // Check GitHub for changes every minute.
+        pollSCM('H/1 * * * *')
+    }
+
     environment {
         COMPOSE_PROJECT_NAME = 'labasset'
-        TAG = "${env.BUILD_NUMBER}"
+        TAG = "${BUILD_NUMBER}"
     }
 
     stages {
@@ -13,75 +19,79 @@ pipeline {
             }
         }
 
-        stage('Verify Files') {
+        stage('Test') {
             steps {
                 sh '''
-                    test -f docker-compose.yml
-                    test -f .env.example
-                    test -f frontend/Dockerfile
-                    test -f asset-api/server.js
-                    echo "Required project files found."
+                    set -eu
+
+                    echo "Checking API JavaScript syntax..."
+                    node --check asset-api/server.js
+
+                    echo "Checking frontend JavaScript syntax..."
+                    node --check frontend/public/js/app.js
+
+                    echo "Checking required frontend elements..."
+                    grep -q 'id="asset-list"' frontend/public/index.html
+
+                    echo "All tests passed."
                 '''
             }
         }
 
-        stage('Build and Deploy') {
+        stage('Build Images') {
             steps {
-                withCredentials([file(
-                    credentialsId: 'labasset-env',
-                    variable: 'ENV_FILE'
-                )]) {
+                sh '''
+                    set -eu
+
+                    sed -i "s/BUILD_NUMBER_PLACEHOLDER/${TAG}/g" \
+                        frontend/public/index.html
+
+                    docker compose build
+                '''
+            }
+        }
+
+        stage('Deploy') {
+            steps {
+                withCredentials([
+                    file(
+                        credentialsId: 'labasset-env',
+                        variable: 'ENV_FILE'
+                    )
+                ]) {
                     sh '''
-                        set +x
+                        set -eu
                         cp "$ENV_FILE" .env
-                        trap 'rm -f .env' EXIT
-
-                        echo "Validating Docker Compose configuration..."
-                        docker compose config --quiet
-
-                        echo "Building application images..."
-                        docker compose build
-
-                        echo "Starting application for pre-deploy checks..."
-                        docker compose up -d
-
-                        ready=0
-                        for i in $(seq 1 30); do
-                            if curl -fsS http://host.docker.internal:8080/api/health; then
-                                ready=1
-                                break
-                            fi
-                            sleep 2
-                        done
-
-                        if [ "$ready" -ne 1 ]; then
-                            echo "API health check failed."
-                            exit 1
-                        fi
-
-                        curl -fsS http://host.docker.internal:8080/api/assets
-
-                        echo "Deploying application..."
                         docker compose up -d --no-build --remove-orphans
-
-                        echo "Running post-deploy checks..."
-                        curl -fsS http://host.docker.internal:8080/
-                        curl -fsS http://host.docker.internal:8080/api/health
-                        curl -fsS http://host.docker.internal:8080/api/assets
-
-                        echo "All deployment checks passed."
                     '''
                 }
+            }
+        }
+
+        stage('Smoke Test') {
+            steps {
+                sh '''
+                    set -eu
+                    curl --retry 10 --retry-delay 3 \
+                        --retry-connrefused \
+                        -f http://localhost:8080/
+                    curl --retry 10 --retry-delay 3 \
+                        --retry-connrefused \
+                        -f http://localhost:8080/api/assets
+                '''
             }
         }
     }
 
     post {
         success {
-            echo "Build ${TAG} completed successfully."
+            echo "Build ${TAG} deployed successfully."
         }
         failure {
-            echo "Build ${TAG} failed."
+            echo "Build ${TAG} failed. Check the stage logs."
+        }
+        always {
+            sh 'rm -f .env'
         }
     }
 }
