@@ -20,32 +20,59 @@ pipeline {
         }
 
         
+
 stage('Test') {
     steps {
         sh '''
             set -eu
+
+            echo "Checking project file locations..."
+            pwd
+            find . -maxdepth 5 -type f \
+                \\( -name 'server.js' -o -name 'app.js' -o -name 'index.html' \\) \
+                -not -path './.git/*'
+
+            API_FILE=$(find . -type f \
+                -path '*/asset-api/server.js' \
+                -not -path './.git/*' -print -quit)
+
+            JS_FILE=$(find . -type f \
+                -path '*/frontend/public/js/app.js' \
+                -not -path './.git/*' -print -quit)
+
+            HTML_FILE=$(find . -type f \
+                -path '*/frontend/public/index.html' \
+                -not -path './.git/*' -print -quit)
+
+            if [ -z "$API_FILE" ] || \
+               [ -z "$JS_FILE" ] || \
+               [ -z "$HTML_FILE" ]; then
+                echo "ERROR: Required project files were not found."
+                exit 1
+            fi
 
             echo "Checking API JavaScript syntax..."
             docker run --rm \
                 -v "$PWD:/workspace" \
                 -w /workspace \
                 node:22-alpine \
-                node --check asset-api/server.js
+                node --check "$API_FILE"
 
             echo "Checking frontend JavaScript syntax..."
             docker run --rm \
                 -v "$PWD:/workspace" \
                 -w /workspace \
                 node:22-alpine \
-                node --check frontend/public/js/app.js
+                node --check "$JS_FILE"
 
             echo "Checking required frontend elements..."
-            grep -q 'id="asset-list"' frontend/public/index.html
+            grep -q 'id="asset-list"' "$HTML_FILE"
 
             echo "All tests passed."
         '''
     }
 }
+
 
 
         stage('Build Images') {
