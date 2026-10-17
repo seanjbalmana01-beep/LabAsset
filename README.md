@@ -19,3 +19,4 @@ LabAsset is a multi-module laboratory resource tracking system containerized wit
    cp .env.example .env
 
 <!-- CI/CD test: verifying automatic Jenkins builds after Git push. -->
+<!-- CI/CD polling test -->
