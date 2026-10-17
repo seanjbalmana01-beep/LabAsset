@@ -19,24 +19,34 @@ pipeline {
             }
         }
 
-        stage('Test') {
-            steps {
-                sh '''
-                    set -eu
+        
+stage('Test') {
+    steps {
+        sh '''
+            set -eu
 
-                    echo "Checking API JavaScript syntax..."
-                    node --check asset-api/server.js
+            echo "Checking API JavaScript syntax..."
+            docker run --rm \
+                -v "$PWD:/workspace" \
+                -w /workspace \
+                node:22-alpine \
+                node --check asset-api/server.js
 
-                    echo "Checking frontend JavaScript syntax..."
-                    node --check frontend/public/js/app.js
+            echo "Checking frontend JavaScript syntax..."
+            docker run --rm \
+                -v "$PWD:/workspace" \
+                -w /workspace \
+                node:22-alpine \
+                node --check frontend/public/js/app.js
 
-                    echo "Checking required frontend elements..."
-                    grep -q 'id="asset-list"' frontend/public/index.html
+            echo "Checking required frontend elements..."
+            grep -q 'id="asset-list"' frontend/public/index.html
 
-                    echo "All tests passed."
-                '''
-            }
-        }
+            echo "All tests passed."
+        '''
+    }
+}
+
 
         stage('Build Images') {
             steps {
