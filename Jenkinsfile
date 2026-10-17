@@ -81,18 +81,22 @@ stage('Test') {
         }
 
         stage('Smoke Test') {
-            steps {
-                sh '''
-                    set -eu
-                    curl --retry 10 --retry-delay 3 \
-                        --retry-connrefused \
-                        -f http://localhost:8080/
-                    curl --retry 10 --retry-delay 3 \
-                        --retry-connrefused \
-                        -f http://localhost:8080/api/assets
-                '''
-            }
-        }
+    steps {
+        sh '''
+            set -eu
+
+            echo "Testing LabAsset frontend..."
+            curl --retry 10 --retry-delay 3 --retry-connrefused \
+                -f http://host.docker.internal:8080/
+
+            echo "Testing LabAsset API..."
+            curl --retry 10 --retry-delay 3 --retry-connrefused \
+                -f http://host.docker.internal:8080/api/assets
+
+            echo "Smoke tests passed."
+        '''
+    }
+}
     }
 
     post {
