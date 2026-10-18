@@ -151,6 +151,13 @@ app.put('/requests/:id', async (req, res) => {
     }
 });
 
+app.get('/health', (req, res) => {
+    res.status(200).json({
+        status: 'OK',
+        service: 'request-service'
+    });
+});
+
 app.listen(3001, () => {
     console.log('Request Service running on port 3001');
 });

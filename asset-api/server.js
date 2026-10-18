@@ -128,6 +128,12 @@ app.delete('/assets/:id', async (req, res) => {
     }
 });
 
+app.get('/health', (req, res) => {
+    res.status(200).json({
+        status: 'OK',
+        service: 'asset-api'
+    });
+});
 // Start server
 app.listen(3000, () => {
     console.log('Asset API running on port 3000');
