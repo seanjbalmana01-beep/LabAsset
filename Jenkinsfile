@@ -39,7 +39,7 @@ pipeline {
                         < request-service/server.js
 
                     echo "Checking required frontend elements..."
-                    grep -q 'LabAsset Portal' frontend/public/index.html
+                    grep -Fq '<h1 class="text-lg font-bold tracking-wide text-indigo-200">LabAsset Portal</h1>' frontend/public/index.html
 
                     echo "Frontend element check passed."
                     echo "All tests passed."
