@@ -36,6 +36,11 @@ stage('Test') {
             docker run --rm -i node:22-alpine sh -c \
                 'cat > /tmp/check.js && node --check /tmp/check.js' \
                 < frontend/public/js/app.js
+            
+            echo "Checking Request Service JavaScript syntax..."
+            docker run --rm -i node:22-alpine sh -c \
+                'cat > /tmp/check.js && node --check /tmp/check.js' \
+                < request-service/server.js
 
             echo "Checking required frontend elements..."
             grep -q 'LabAsset Portal' frontend/public/index.html
@@ -92,6 +97,10 @@ stage('Test') {
             echo "Testing LabAsset API..."
             curl --retry 10 --retry-delay 3 --retry-connrefused \
                 -f http://host.docker.internal:8080/api/assets
+            
+            echo "Testing Request Service..."
+            curl --retry 10 --retry-delay 3 --retry-connrefused \
+                -f http://host.docker.internal:8080/api/requests
 
             echo "Smoke tests passed."
         '''
