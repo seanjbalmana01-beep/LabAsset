@@ -1,0 +1,139 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1600" height="1000" viewBox="0 0 1600 1000" role="img" aria-labelledby="title desc">
+  <title id="title">LabAsset System Architecture</title>
+  <desc id="desc">Architecture of the LabAsset Docker Compose application, including browser request routing, API services, MySQL storage, and the separate Jenkins deployment path.</desc>
+  <defs>
+    <marker id="arrow" markerWidth="10" markerHeight="10" refX="8" refY="5" orient="auto">
+      <path d="M0 0 L10 5 L0 10 z" fill="#526581"/>
+    </marker>
+    <marker id="arrowBlue" markerWidth="10" markerHeight="10" refX="8" refY="5" orient="auto">
+      <path d="M0 0 L10 5 L0 10 z" fill="#2563eb"/>
+    </marker>
+    <marker id="arrowGreen" markerWidth="10" markerHeight="10" refX="8" refY="5" orient="auto">
+      <path d="M0 0 L10 5 L0 10 z" fill="#059669"/>
+    </marker>
+    <style>
+      text { font-family: "Segoe UI", Arial, sans-serif; fill: #17243a; }
+      .title { font-size: 30px; font-weight: 700; }
+      .subtitle { font-size: 15px; fill: #61718a; }
+      .group-title { font-size: 18px; font-weight: 700; fill: #334766; }
+      .box-title { font-size: 17px; font-weight: 700; }
+      .box-line { font-size: 14px; fill: #43546e; }
+      .small { font-size: 12px; fill: #596b84; }
+      .edge-label { font-size: 12px; font-weight: 600; fill: #3e506b; }
+      .container { stroke-width: 2; rx: 12; }
+    </style>
+  </defs>
+
+  <rect width="1600" height="1000" fill="#f5f8fc"/>
+  <text x="60" y="58" class="title">LabAsset | System Architecture</text>
+  <text x="60" y="87" class="subtitle">Docker Compose application, request routing, persistent storage, and CI/CD deployment path</text>
+
+  <!-- Application network boundary -->
+  <rect x="260" y="135" width="1275" height="565" rx="18" fill="#ffffff" stroke="#93a8c5" stroke-width="2" stroke-dasharray="9 7"/>
+  <rect x="285" y="120" width="490" height="34" rx="8" fill="#f5f8fc"/>
+  <text x="300" y="144" class="group-title">APPLICATION COMPOSE PROJECT · app-net</text>
+
+  <!-- Browser and host entry -->
+  <rect x="45" y="315" width="175" height="96" rx="14" fill="#eaf2ff" stroke="#6b91d1" class="container"/>
+  <text x="132" y="350" text-anchor="middle" class="box-title">User browser</text>
+  <text x="132" y="376" text-anchor="middle" class="box-line">HTTP client</text>
+
+  <!-- Application containers -->
+  <rect x="320" y="260" width="220" height="150" rx="12" fill="#eaf2ff" stroke="#4f7fca" class="container"/>
+  <text x="430" y="294" text-anchor="middle" class="box-title">proxy</text>
+  <text x="430" y="319" text-anchor="middle" class="box-line">Nginx reverse proxy</text>
+  <text x="430" y="344" text-anchor="middle" class="box-line">Container port 80</text>
+  <text x="430" y="378" text-anchor="middle" class="small">Only app port published to host</text>
+
+  <rect x="660" y="175" width="230" height="115" rx="12" fill="#edf7ff" stroke="#5b9bc9" class="container"/>
+  <text x="775" y="209" text-anchor="middle" class="box-title">frontend</text>
+  <text x="775" y="234" text-anchor="middle" class="box-line">Static UI · Nginx :80</text>
+  <text x="775" y="260" text-anchor="middle" class="small">Browser JS uses /api/requests</text>
+
+  <rect x="660" y="335" width="230" height="115" rx="12" fill="#eff6ff" stroke="#5b85d0" class="container"/>
+  <text x="775" y="369" text-anchor="middle" class="box-title">asset-api</text>
+  <text x="775" y="394" text-anchor="middle" class="box-line">Express · Node.js :3000</text>
+  <text x="775" y="420" text-anchor="middle" class="small">/assets · CRUD API</text>
+
+  <rect x="660" y="495" width="230" height="115" rx="12" fill="#effcf7" stroke="#42a883" class="container"/>
+  <text x="775" y="529" text-anchor="middle" class="box-title">request-service</text>
+  <text x="775" y="554" text-anchor="middle" class="box-line">Express · Node.js :3001</text>
+  <text x="775" y="580" text-anchor="middle" class="small">/requests · request workflow</text>
+
+  <rect x="1020" y="335" width="230" height="180" rx="12" fill="#fff7e8" stroke="#d6a347" class="container"/>
+  <text x="1135" y="371" text-anchor="middle" class="box-title">db</text>
+  <text x="1135" y="398" text-anchor="middle" class="box-line">MySQL 8.4 · :3306</text>
+  <text x="1135" y="425" text-anchor="middle" class="box-line">assets + requests</text>
+  <text x="1135" y="467" text-anchor="middle" class="small">No host port published</text>
+
+  <!-- Storage volumes -->
+  <path d="M1135 515 V548" stroke="#526581" stroke-width="2" marker-end="url(#arrow)"/>
+  <rect x="1000" y="560" width="270" height="72" rx="12" fill="#fffaf0" stroke="#d6a347" stroke-width="2"/>
+  <text x="1135" y="590" text-anchor="middle" class="box-title">Named volume: db-data</text>
+  <text x="1135" y="614" text-anchor="middle" class="small">mounted at /var/lib/mysql</text>
+
+  <rect x="1310" y="365" width="195" height="98" rx="12" fill="#f8f5ff" stroke="#9b85cf" stroke-width="2"/>
+  <text x="1407" y="397" text-anchor="middle" class="box-title">db/init.sql</text>
+  <text x="1407" y="422" text-anchor="middle" class="small">Host-file bind mount</text>
+  <text x="1407" y="442" text-anchor="middle" class="small">first-time DB initialization</text>
+  <path d="M1310 415 H1260" stroke="#526581" stroke-width="2" stroke-dasharray="6 5" marker-end="url(#arrow)"/>
+
+  <!-- Application request and database flows -->
+  <path d="M220 363 H310" fill="none" stroke="#2563eb" stroke-width="3" marker-end="url(#arrowBlue)"/>
+  <rect x="221" y="327" width="96" height="26" rx="6" fill="#f5f8fc"/>
+  <text x="269" y="345" text-anchor="middle" class="edge-label">HTTP :8080</text>
+  <text x="430" y="433" text-anchor="middle" class="small">host 8080 → container 80</text>
+
+  <path d="M540 300 H610 V232 H650" fill="none" stroke="#526581" stroke-width="2.5" marker-end="url(#arrow)"/>
+  <rect x="547" y="250" width="85" height="24" rx="5" fill="#ffffff"/>
+  <text x="589" y="267" text-anchor="middle" class="edge-label">/ → :80</text>
+
+  <path d="M540 335 H620 V392 H650" fill="none" stroke="#526581" stroke-width="2.5" marker-end="url(#arrow)"/>
+  <rect x="548" y="342" width="105" height="40" rx="5" fill="#ffffff"/>
+  <text x="600" y="358" text-anchor="middle" class="edge-label">/api/assets</text>
+  <text x="600" y="374" text-anchor="middle" class="small">→ /assets</text>
+
+  <path d="M540 375 H620 V552 H650" fill="none" stroke="#526581" stroke-width="2.5" marker-end="url(#arrow)"/>
+  <rect x="544" y="466" width="116" height="43" rx="5" fill="#ffffff"/>
+  <text x="602" y="483" text-anchor="middle" class="edge-label">/api/requests</text>
+  <text x="602" y="500" text-anchor="middle" class="small">→ /requests</text>
+
+  <path d="M890 392 H1008" fill="none" stroke="#059669" stroke-width="2.5" marker-end="url(#arrowGreen)"/>
+  <rect x="909" y="359" width="78" height="24" rx="5" fill="#ffffff"/>
+  <text x="948" y="376" text-anchor="middle" class="edge-label">MySQL :3306</text>
+  <path d="M890 552 H955 V475 H1008" fill="none" stroke="#059669" stroke-width="2.5" marker-end="url(#arrowGreen)"/>
+  <rect x="904" y="512" width="86" height="24" rx="5" fill="#ffffff"/>
+  <text x="947" y="529" text-anchor="middle" class="edge-label">MySQL :3306</text>
+
+  <!-- Jenkins CI/CD project -->
+  <rect x="45" y="760" width="1490" height="190" rx="18" fill="#f1f4fa" stroke="#a9b7ca" stroke-width="2" stroke-dasharray="9 7"/>
+  <text x="70" y="790" class="group-title">SEPARATE JENKINS COMPOSE PROJECT · separate default network</text>
+
+  <rect x="85" y="817" width="310" height="100" rx="12" fill="#fff1f1" stroke="#cc7777" stroke-width="2"/>
+  <text x="240" y="850" text-anchor="middle" class="box-title">Jenkins controller</text>
+  <text x="240" y="875" text-anchor="middle" class="box-line">Web :8080 → host :8081</text>
+  <text x="240" y="898" text-anchor="middle" class="box-line">Inbound agent :50000 → host :50000</text>
+
+  <rect x="465" y="817" width="250" height="100" rx="12" fill="#ffffff" stroke="#9b85cf" stroke-width="2"/>
+  <text x="590" y="852" text-anchor="middle" class="box-title">jenkins_home</text>
+  <text x="590" y="879" text-anchor="middle" class="box-line">Named volume</text>
+  <text x="590" y="900" text-anchor="middle" class="small">/var/jenkins_home</text>
+
+  <rect x="800" y="817" width="280" height="100" rx="12" fill="#ffffff" stroke="#7f97b7" stroke-width="2"/>
+  <text x="940" y="850" text-anchor="middle" class="box-title">Project bind mount</text>
+  <text x="940" y="877" text-anchor="middle" class="box-line">Host project → /workspace/labasset</text>
+  <text x="940" y="900" text-anchor="middle" class="small">Available in Jenkins container</text>
+
+  <rect x="1160" y="817" width="315" height="100" rx="12" fill="#edf7ff" stroke="#5b9bc9" stroke-width="2"/>
+  <text x="1317" y="850" text-anchor="middle" class="box-title">Host Docker Engine</text>
+  <text x="1317" y="877" text-anchor="middle" class="box-line">via /var/run/docker.sock</text>
+  <text x="1317" y="900" text-anchor="middle" class="small">Build images · Compose deploy · smoke test</text>
+
+  <path d="M395 867 H455" stroke="#526581" stroke-width="2" marker-end="url(#arrow)"/>
+  <path d="M1080 867 H1150" stroke="#2563eb" stroke-width="2.5" marker-end="url(#arrowBlue)"/>
+  <path d="M1317 817 V729 H1390 V710" fill="none" stroke="#526581" stroke-width="2" stroke-dasharray="7 5" marker-end="url(#arrow)"/>
+  <rect x="1328" y="730" width="165" height="26" rx="5" fill="#f5f8fc"/>
+  <text x="1410" y="748" text-anchor="middle" class="edge-label">deploys app stack</text>
+
+  <text x="70" y="973" class="small">Jenkins checks SCM out to its job workspace; the project bind mount is separate. Jenkins controls the host Docker Engine through the mounted socket.</text>
+</svg>
