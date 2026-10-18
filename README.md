@@ -118,3 +118,26 @@ Member names below are the first names currently recorded in the project documen
 ## Further documentation
 
 See the [architecture diagram](./architecture.svg) for the service layout, request flow, ports, networks, and storage. This README documents the project setup and Jenkins workflow.
+
+
+## Troubleshooting
+
+### Application does not open
+- Check whether the Docker containers are running.
+- Run `docker compose ps` from the project directory.
+- Review the logs with `docker compose logs`.
+
+### Application changes do not appear
+- Check the latest Jenkins build and confirm that all pipeline stages passed.
+- Verify that the new code was pushed to the Git repository.
+- Refresh the browser after deployment completes.
+
+### Database connection problems
+- Check whether the database container is healthy.
+- Verify that the required database environment variables are configured.
+- Review the database and API logs for connection errors.
+
+### Deployment fails
+- Open the failed Jenkins build and inspect its console output.
+- Identify the stage that failed before attempting another deployment.
+- Follow the project's documented rollback procedure if recovery is needed.
