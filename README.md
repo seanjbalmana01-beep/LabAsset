@@ -99,8 +99,9 @@ This configures Jenkins SCM polling at approximately one-minute intervals using 
 3. **Build Images** — substitutes the Jenkins build number in the frontend and builds the application images.
 4. **Deploy** — loads the `labasset-env` Jenkins Secret file and runs `docker compose up -d --no-build --remove-orphans`.
 5. **Smoke Test** — checks the frontend, asset API, and request API over the published proxy endpoint.
+6. **Mark Stable** — after all smoke tests pass, tags the verified images as `stable` for rollback.
 
-A failed test prevents the build and deployment stages from running. A smoke-test failure marks the pipeline failed but does **not** automatically roll back an already deployed stack. This repository configures SCM polling, not a webhook. A working automatic trigger also depends on the Jenkins job being connected to this repository and the job having SCM polling enabled through its Pipeline definition.
+A failed test prevents the build and deployment stages from running. If deployment or a smoke test fails, the pipeline attempts to redeploy the most recently verified `stable` images and reruns the smoke tests. Rollback requires a complete set of stable images; before the first successful pipeline run, no stable set may exist, so automatic rollback cannot proceed. This repository configures SCM polling, not a webhook. A working automatic trigger also depends on the Jenkins job being connected to this repository and the job having SCM polling enabled through its Pipeline definition.
 
 > The smoke tests use `host.docker.internal` to reach the host from Jenkins. Confirm that this hostname resolves from the Jenkins container on the target Docker host.
 
