@@ -1,3 +1,4 @@
+
 const express = require('express');
 const mysql = require('mysql2/promise');
 
@@ -16,28 +17,42 @@ async function getConnection() {
     return mysql.createConnection(dbConfig);
 }
 
-/* Health check */
 app.get('/health', async (req, res) => {
+    let connection;
+
     try {
-        const connection = await getConnection();
+        connection = await getConnection();
         await connection.execute('SELECT 1');
-        await connection.end();
 
         res.status(200).json({
-            status: 'healthy'
+            status: 'healthy',
+            service: 'request-service',
+            database: 'connected'
         });
     } catch (err) {
-        console.error(err);
+        console.error('Request Service health check failed:', err);
+
         res.status(503).json({
-            status: 'unhealthy'
+            status: 'unhealthy',
+            service: 'request-service',
+            database: 'disconnected'
         });
+    } finally {
+        if (connection) {
+            try {
+                await connection.end();
+            } catch (err) {
+                console.error('Failed to close database connection:', err);
+            }
+        }
     }
 });
 
-/* Get all requests */
 app.get('/requests', async (req, res) => {
+    let connection;
+
     try {
-        const connection = await getConnection();
+        connection = await getConnection();
 
         const [rows] = await connection.execute(`
             SELECT
@@ -52,18 +67,24 @@ app.get('/requests', async (req, res) => {
             ORDER BY id DESC
         `);
 
-        await connection.end();
-
         res.json(rows);
     } catch (err) {
         console.error(err);
+
         res.status(500).json({
             error: 'Database error'
         });
+    } finally {
+        if (connection) {
+            try {
+                await connection.end();
+            } catch (err) {
+                console.error('Failed to close database connection:', err);
+            }
+        }
     }
 });
 
-/* Create request */
 app.post('/requests', async (req, res) => {
     const {
         professor,
@@ -78,8 +99,10 @@ app.post('/requests', async (req, res) => {
         });
     }
 
+    let connection;
+
     try {
-        const connection = await getConnection();
+        connection = await getConnection();
 
         const [result] = await connection.execute(
             `
@@ -95,21 +118,27 @@ app.post('/requests', async (req, res) => {
             ]
         );
 
-        await connection.end();
-
         res.status(201).json({
             id: result.insertId,
             message: 'Request created successfully'
         });
     } catch (err) {
         console.error(err);
+
         res.status(500).json({
             error: 'Database error'
         });
+    } finally {
+        if (connection) {
+            try {
+                await connection.end();
+            } catch (err) {
+                console.error('Failed to close database connection:', err);
+            }
+        }
     }
 });
 
-/* Approve / reject request */
 app.put('/requests/:id', async (req, res) => {
     const { id } = req.params;
     const { status } = req.body;
@@ -120,8 +149,10 @@ app.put('/requests/:id', async (req, res) => {
         });
     }
 
+    let connection;
+
     try {
-        const connection = await getConnection();
+        connection = await getConnection();
 
         const [result] = await connection.execute(
             `
@@ -131,8 +162,6 @@ app.put('/requests/:id', async (req, res) => {
             `,
             [status, id]
         );
-
-        await connection.end();
 
         if (result.affectedRows === 0) {
             return res.status(404).json({
@@ -145,17 +174,19 @@ app.put('/requests/:id', async (req, res) => {
         });
     } catch (err) {
         console.error(err);
+
         res.status(500).json({
             error: 'Database error'
         });
+    } finally {
+        if (connection) {
+            try {
+                await connection.end();
+            } catch (err) {
+                console.error('Failed to close database connection:', err);
+            }
+        }
     }
-});
-
-app.get('/health', (req, res) => {
-    res.status(200).json({
-        status: 'OK',
-        service: 'request-service'
-    });
 });
 
 app.listen(3001, () => {
