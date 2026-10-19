@@ -108,14 +108,14 @@ A failed test prevents the build and deployment stages from running. If deployme
 
 ## Team members and roles
 
-Member names below are the first names currently recorded in the project documentation. Full names and individual responsibilities are **to be confirmed by the team**.
+The following table outlines the team members and their respective roles and responsibilities in the LabAsset project.
 
-| Member | Role / responsibility |
+| Member | Role / Responsibility |
 |---|---|
-| Aki | To be confirmed |
-| Justine | To be confirmed |
-| Kaith | To be confirmed |
-| Sean | To be confirmed |
+| Sean | Project Lead / Scrum Master, Documentation Lead |
+| Justine | DevOps / CI/CD Engineer, Documentation Lead |
+| Aquennie | Infrastructure Engineer, Documentation Lead |
+| Kaith | Frontend, QA, Documentation Lead |
 
 ## Further documentation
 
