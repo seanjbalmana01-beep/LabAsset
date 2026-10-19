@@ -112,10 +112,10 @@ The following table outlines the team members and their respective roles and res
 
 | Member | Role / Responsibility |
 |---|---|
-| Sean | Project Lead / Scrum Master, Documentation Lead |
-| Justine | DevOps / CI/CD Engineer, Documentation Lead |
-| Aquennie | Infrastructure Engineer, Documentation Lead |
-| Kaith | Frontend, QA, Documentation Lead |
+| Balmana, Sean Jane A. | Project Lead / Scrum Master, Documentation |
+| Cajurao, Justine Gaudenz R. | DevOps / CI/CD Engineer, Documentation |
+| Ortenero, Aquennie T. | Infrastructure Engineer, Documentation |
+| Ramos, Kaith Anne R. | Frontend, QA, Documentation |
 
 ## Further documentation
 
