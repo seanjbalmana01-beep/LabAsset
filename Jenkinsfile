@@ -23,6 +23,20 @@ pipeline {
                 sh '''
                     set -eu
 
+                    echo "Installing Asset API dependencies..."
+                    docker run --rm \
+                        -v "$PWD/asset-api:/app" \
+                        -w /app \
+                        node:22-alpine \
+                        npm install
+
+                    echo "Running automated Asset API tests..."
+                    docker run --rm \
+                        -v "$PWD/asset-api:/app" \
+                        -w /app \
+                        node:22-alpine \
+                        npm test
+
                     echo "Checking API JavaScript syntax..."
                     docker run --rm -i node:22-alpine sh -c \
                         'cat > /tmp/check.js && node --check /tmp/check.js' \
@@ -41,8 +55,7 @@ pipeline {
                     echo "Checking required frontend elements..."
                     grep -q 'LabAsset Portal' frontend/public/index.html
 
-                    echo "Frontend element check passed."
-                    echo "All tests passed."
+                    echo "All tests and checks passed."
                 '''
             }
         }
