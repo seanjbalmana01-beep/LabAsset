@@ -96,19 +96,34 @@ pipeline {
                 sh '''
                     set -eu
 
+                    BASE_URL="http://host.docker.internal:8080"
+
                     echo "Testing LabAsset frontend..."
                     curl --retry 10 --retry-delay 3 --retry-connrefused \
-                        -f http://host.docker.internal:8080/
+                        --fail --silent --show-error \
+                        "$BASE_URL/" -o /dev/null
 
-                    echo "Testing LabAsset API..."
+                    echo "Testing Asset API health..."
                     curl --retry 10 --retry-delay 3 --retry-connrefused \
-                        -f http://host.docker.internal:8080/api/assets
+                        --fail --silent --show-error \
+                        "$BASE_URL/api/health"
 
-                    echo "Testing Request Service..."
+                    echo "Testing Request Service health..."
                     curl --retry 10 --retry-delay 3 --retry-connrefused \
-                        -f http://host.docker.internal:8080/api/requests
+                        --fail --silent --show-error \
+                        "$BASE_URL/api/requests/health"
 
-                    echo "Smoke tests passed."
+                    echo "Testing Asset API endpoint..."
+                    curl --retry 10 --retry-delay 3 --retry-connrefused \
+                        --fail --silent --show-error \
+                        "$BASE_URL/api/assets" -o /dev/null
+
+                    echo "Testing Request Service endpoint..."
+                    curl --retry 10 --retry-delay 3 --retry-connrefused \
+                        --fail --silent --show-error \
+                        "$BASE_URL/api/requests" -o /dev/null
+
+                    echo "All smoke tests passed."
                 '''
             }
         }
@@ -167,14 +182,27 @@ pipeline {
                     TAG=stable docker compose up -d --no-build --remove-orphans
 
                     echo "Checking rollback health..."
-                    curl --retry 10 --retry-delay 3 --retry-connrefused \
-                        -f http://host.docker.internal:8080/
+                    BASE_URL="http://host.docker.internal:8080"
 
                     curl --retry 10 --retry-delay 3 --retry-connrefused \
-                        -f http://host.docker.internal:8080/api/assets
+                        --fail --silent --show-error \
+                        "$BASE_URL/" -o /dev/null
 
                     curl --retry 10 --retry-delay 3 --retry-connrefused \
-                        -f http://host.docker.internal:8080/api/requests
+                        --fail --silent --show-error \
+                        "$BASE_URL/api/health"
+
+                    curl --retry 10 --retry-delay 3 --retry-connrefused \
+                        --fail --silent --show-error \
+                        "$BASE_URL/api/requests/health"
+
+                    curl --retry 10 --retry-delay 3 --retry-connrefused \
+                        --fail --silent --show-error \
+                        "$BASE_URL/api/assets" -o /dev/null
+
+                    curl --retry 10 --retry-delay 3 --retry-connrefused \
+                        --fail --silent --show-error \
+                        "$BASE_URL/api/requests" -o /dev/null
 
                     echo "Rollback smoke tests passed."
                 '''
