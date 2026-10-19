@@ -1,9 +1,16 @@
+
 {
   "name": "asset-api",
   "version": "1.0.0",
   "main": "server.js",
+  "scripts": {
+    "test": "node --test"
+  },
   "dependencies": {
     "express": "^4.19.2",
     "mysql2": "^3.9.2"
+  },
+  "devDependencies": {
+    "supertest": "^7.3.1"
   }
 }
