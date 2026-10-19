@@ -1,3 +1,4 @@
+
 # LabAsset
 
 Containerized laboratory asset and equipment-request system with a Jenkins CI/CD pipeline.
@@ -12,7 +13,7 @@ The frontend currently reads and updates equipment requests through the request 
 
 ![LabAsset architecture showing application containers, ports, networks, volumes, request flow, and Jenkins deployment path](./architecture.svg)
 
-The application is entered through the proxy at `http://localhost:8080`. Nginx serves the frontend at `/`, forwards `/api/assets...` to the asset API, and forwards `/api/requests...` to the request service. Both APIs connect to MySQL over the internal `app-net`; the database port is not published on the host. The named volume `db-data` persists database files across container recreation.
+The application is entered through the proxy at [http://localhost:8080](http://localhost:8080). Nginx serves the frontend at `/`, forwards `/api/assets...` to the asset API, and forwards `/api/requests...` to the request service. Both APIs connect to MySQL over the internal `app-net`; the database port is not published on the host. The named volume `db-data` persists database files across container recreation.
 
 Jenkins runs in a separate Compose project and network. It checks out the configured repository revision, runs the pipeline, and controls the host Docker Engine through the mounted Docker socket to build and deploy the application stack. Jenkins does not join `app-net`.
 
@@ -120,25 +121,28 @@ Member names below are the first names currently recorded in the project documen
 
 See the [architecture diagram](./architecture.svg) for the service layout, request flow, ports, networks, and storage. This README documents the project setup and Jenkins workflow.
 
-
 ## Troubleshooting
 
 ### Application does not open
+
 - Check whether the Docker containers are running.
 - Run `docker compose ps` from the project directory.
 - Review the logs with `docker compose logs`.
 
 ### Application changes do not appear
+
 - Check the latest Jenkins build and confirm that all pipeline stages passed.
 - Verify that the new code was pushed to the Git repository.
 - Refresh the browser after deployment completes.
 
 ### Database connection problems
+
 - Check whether the database container is healthy.
 - Verify that the required database environment variables are configured.
 - Review the database and API logs for connection errors.
 
 ### Deployment fails
+
 - Open the failed Jenkins build and inspect its console output.
 - Identify the stage that failed before attempting another deployment.
 - Follow the project's documented rollback procedure if recovery is needed.

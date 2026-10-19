@@ -1,8 +1,8 @@
+
 pipeline {
     agent any
 
     triggers {
-        // Check GitHub for changes every minute.
         pollSCM('H/1 * * * *')
     }
 
